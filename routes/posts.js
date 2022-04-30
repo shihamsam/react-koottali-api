@@ -1,5 +1,7 @@
 const express = require("express");
+const { restart } = require("nodemon");
 const Post = require("../models/Post");
+const User = require("../models/User");
 const router = express.Router();
 
 //create a post
@@ -75,20 +77,36 @@ router.put("/:id/like", async (req, res) => {
   }
 });
 
+//get timeline posts
+router.get("/timeline", async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.body.userId);
+    const userPosts = await Post.find({ userId: req.body.userId });
+    const friendPosts = await Promise.all(
+      currentUser.followings.map((friendId) => Post.find({ userId: friendId }))
+    );
+
+    res.json(userPosts.concat(friendPosts));
+  } catch (error) {
+    console.log("Server error occured:", error);
+    res.status(500).json(error);
+  }
+});
+
 //get a post
 router.get("/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
 
     !post && res.status(404).json("Post not found!");
-  
+
     res.status(200).json(post);
   } catch (error) {
     res.status(500).json(error);
   }
 });
 
-//get timeline posts
+//get all posts
 router.get("/", async (req, res) => {
   try {
     const posts = await Post.find({});
