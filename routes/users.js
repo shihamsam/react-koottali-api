@@ -4,9 +4,9 @@ const User = require("../models/User");
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.send("It's users api route!");
-});
+// router.get("/", (req, res) => {
+//   res.send("It's users api route!");
+// });
 
 //delete user
 router.delete("/:id", async (req, res) => {
@@ -98,9 +98,16 @@ router.put("/:id", async (req, res) => {
 
 //get a user
 
-router.get("/:id", async (req, res) => {
+router.get("/", async (req, res) => {
+
+  const userId = req.query.userId;
+  const username = req.query.username;
+
+
   try {
-    const user = await User.findById(req.params.id);
+    const user = userId
+      ? await User.findById(userId)
+      : await User.findOne({ username: username });
 
     !user && res.status(404).json("user not found");
 

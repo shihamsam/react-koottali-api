@@ -78,15 +78,28 @@ router.put("/:id/like", async (req, res) => {
 });
 
 //get timeline posts
-router.get("/timeline", async (req, res) => {
+router.get("/timeline/:userId", async (req, res) => {
   try {
-    const currentUser = await User.findById(req.body.userId);
-    const userPosts = await Post.find({ userId: req.body.userId });
+    const currentUser = await User.findById(req.params.userId);
+    const userPosts = await Post.find({ userId: req.params.userId });
     const friendPosts = await Promise.all(
       currentUser.followings.map((friendId) => Post.find({ userId: friendId }))
     );
 
-    res.json(userPosts.concat(friendPosts));
+    res.status(200).json(userPosts.concat(...friendPosts));
+  } catch (error) {
+    console.log("Server error occured:", error);
+    res.status(500).json(error);
+  }
+});
+
+//get users all posts
+router.get("/profile/:username", async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username });
+    const userPosts = await Post.find({ userId: user._id });
+
+    res.status(200).json(userPosts);
   } catch (error) {
     console.log("Server error occured:", error);
     res.status(500).json(error);
